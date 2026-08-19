@@ -1039,7 +1039,7 @@ async function callGemini(content, customSystemPrompt){
     throw new Error('Agrega tu clave gratuita de Google Gemini en Perfil para poder traducir.');
   }
 
-  const model = 'gemini-2.0-flash';
+  const model = 'gemini-3.6-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const response = await fetch(url, {
     method: "POST",
