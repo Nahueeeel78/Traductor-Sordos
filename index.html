@@ -498,8 +498,8 @@
       <div class="card" id="inputCardPdf" style="display:none;">
         <label class="photo-drop" id="pdfDrop">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg>
-          <span id="pdfLabel">Toca para subir un PDF (receta, análisis, certificado…)</span>
-          <input type="file" accept="application/pdf" id="pdfInput" style="display:none;">
+          <span id="pdfLabel">Toca para subir un PDF, o un archivo de código (.js, .html, .php, .py…)</span>
+          <input type="file" accept=".pdf,application/pdf,.js,.jsx,.ts,.tsx,.html,.htm,.css,.php,.py,.java,.c,.cpp,.cs,.json,.txt,.md,.sql,.rb,.go,.swift,.kt,.xml,.sh" id="pdfInput" style="display:none;">
         </label>
       </div>
 
@@ -650,7 +650,7 @@
 </div>
 
 <script>
-const state = { mode:'text', level:1, imageBase64:null, imageMedia:null, pdfBase64:null, pdfName:null, lastResult:null };
+const state = { mode:'text', level:1, imageBase64:null, imageMedia:null, pdfBase64:null, pdfName:null, codeText:null, codeFileName:null, lastResult:null };
 
 // ---------- Screen navigation ----------
 const screenIds = { home:'homePage', history:'historyPage', profile:'profilePage', settings:'settingsPage' };
@@ -883,24 +883,52 @@ function handlePhotoFile(file){
 document.getElementById('cameraInput').addEventListener('change', (e) => handlePhotoFile(e.target.files[0]));
 document.getElementById('galleryInput').addEventListener('change', (e) => handlePhotoFile(e.target.files[0]));
 
-// pdf upload
+// pdf / code file upload
+const codeExtensions = ['js','jsx','ts','tsx','html','htm','css','php','py','java','c','cpp','cs','json','txt','md','sql','rb','go','swift','kt','xml','sh'];
 document.getElementById('pdfInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
   state.pdfBase64 = null;
   state.pdfName = null;
-  document.getElementById('pdfLabel').textContent = 'Procesando PDF…';
+  state.codeText = null;
+  state.codeFileName = null;
 
-  if(file.type !== 'application/pdf'){
-    document.getElementById('pdfLabel').textContent = 'Ese archivo no es un PDF. Intenta con otro.';
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const isPdf = file.type === 'application/pdf' || ext === 'pdf';
+  const isCode = !isPdf && codeExtensions.includes(ext);
+
+  if(!isPdf && !isCode){
+    document.getElementById('pdfLabel').textContent = 'Ese archivo no se puede leer. Probá con un PDF o un archivo de código.';
     return;
   }
+
   const maxBytes = 25 * 1024 * 1024;
   if(file.size > maxBytes){
-    document.getElementById('pdfLabel').textContent = 'El PDF es muy pesado (máx. 25 MB). Intenta con otro.';
+    document.getElementById('pdfLabel').textContent = 'El archivo es muy pesado (máx. 25 MB). Intenta con otro.';
     return;
   }
 
+  if(isCode){
+    document.getElementById('pdfLabel').textContent = 'Leyendo archivo…';
+    const reader = new FileReader();
+    reader.onerror = () => {
+      document.getElementById('pdfLabel').textContent = 'No se pudo leer este archivo. Intenta con otro.';
+    };
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      if(!text.trim()){
+        document.getElementById('pdfLabel').textContent = 'El archivo está vacío. Intenta con otro.';
+        return;
+      }
+      state.codeText = text.slice(0, 20000); // keep it reasonable
+      state.codeFileName = file.name;
+      document.getElementById('pdfLabel').textContent = '💻 ' + file.name + ' — listo. Toca para cambiarlo.';
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  document.getElementById('pdfLabel').textContent = 'Procesando PDF…';
   const reader = new FileReader();
   reader.onerror = () => {
     document.getElementById('pdfLabel').textContent = 'No se pudo leer el PDF. Intenta con otro.';
@@ -995,7 +1023,7 @@ async function callClaude(content, customSystemPrompt){
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
-      max_tokens: 1200,
+      max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content }]
     })
@@ -1013,7 +1041,11 @@ async function callClaude(content, customSystemPrompt){
   if(!textBlock || !textBlock.text.trim()){
     throw new Error('No se recibió texto, intenta de nuevo.');
   }
-  return textBlock.text.trim();
+  let result = textBlock.text.trim();
+  if(data.stop_reason === 'max_tokens'){
+    result += '\n\n⚠️ El texto era muy largo y se cortó acá. Probá dividirlo en partes más cortas.';
+  }
+  return result;
 }
 
 // Used when this file runs standalone (fuera de Claude.ai, ej. GitHub Pages) —
@@ -1047,7 +1079,7 @@ async function callGemini(content, customSystemPrompt){
     body: JSON.stringify({
       system_instruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: claudeContentToGeminiParts(content) }],
-      generationConfig: { maxOutputTokens: 1200 }
+      generationConfig: { maxOutputTokens: 4096 }
     })
   });
   if(!response.ok){
@@ -1074,6 +1106,9 @@ async function callGemini(content, customSystemPrompt){
   if(!text){
     throw new Error('No se recibió texto, intenta de nuevo.');
   }
+  if(candidate.finishReason === 'MAX_TOKENS'){
+    return text + '\n\n⚠️ El texto era muy largo y se cortó acá. Probá dividirlo en partes más cortas.';
+  }
   return text;
 }
 
@@ -1090,6 +1125,16 @@ Responde SIEMPRE en este formato exacto, en español, sin encabezados extra:
 **Tipo:** di en 2-4 palabras si es formal, informal, antigua, nueva/moderna, técnica, o de una región (ej: "informal, México").
 
 Si la palabra tiene más de un significado común, explica solo el más usado. Si no reconoces la palabra o no existe en español, dilo claramente y sugiere si puede ser un error de escritura.`;
+
+const codeSystemPrompt = `Ayudas a una persona Sorda cuya primera lengua es la lengua de señas y para quien el español escrito es una segunda lengua, que está aprendiendo programación. Te van a dar el contenido de un archivo de código (JavaScript, HTML, PHP, Python, u otro lenguaje) o un ejercicio de programación.
+
+Explica en español simple y directo:
+- Qué hace el código en general (1-2 frases simples, sin jerga).
+- Después, explica las partes más importantes paso a paso, en orden, con oraciones cortas (sujeto + verbo + objeto).
+- Marca entre ** ** las 2-6 palabras clave más importantes (nombres de funciones, variables importantes, o conceptos como "bucle", "condición", "función").
+- Si hay algún error evidente en el código, señálalo de forma simple, sin usar términos técnicos sin explicarlos.
+- No expliques símbolos básicos de puntuación del lenguaje (como llaves o punto y coma) salvo que sean relevantes para entender un error.
+- Responde SOLO con la explicación en español simple, sin encabezados tipo "Resumen:" ni repetir el código completo.`;
 
 async function lookupWord(word){
   const content = [{ type:'text', text: word }];
@@ -1429,14 +1474,17 @@ document.getElementById('translateBtn').addEventListener('click', async () => {
       { type:'text', text: 'Explica este texto en español simple, siguiendo las reglas del sistema.' }
     ];
   } else if(state.mode === 'pdf'){
-    if(!state.pdfBase64){
-      resultZone.innerHTML = `<div class="error-box">Sube un PDF primero.</div>`;
+    if(state.codeText){
+      content = [{ type:'text', text: state.codeText }];
+    } else if(state.pdfBase64){
+      content = [
+        { type:'document', source:{ type:'base64', media_type:'application/pdf', data: state.pdfBase64 } },
+        { type:'text', text: 'Explica este documento en español simple, siguiendo las reglas del sistema.' }
+      ];
+    } else {
+      resultZone.innerHTML = `<div class="error-box">Sube un PDF o un archivo de código primero.</div>`;
       return;
     }
-    content = [
-      { type:'document', source:{ type:'base64', media_type:'application/pdf', data: state.pdfBase64 } },
-      { type:'text', text: 'Explica este documento en español simple, siguiendo las reglas del sistema.' }
-    ];
   } else {
     const word = document.getElementById('dictWord').value.trim();
     if(!word){
@@ -1477,7 +1525,8 @@ document.getElementById('translateBtn').addEventListener('click', async () => {
       return;
     }
 
-    const result = await callModel(content);
+    const customPrompt = (state.mode === 'pdf' && state.codeText) ? codeSystemPrompt : undefined;
+    const result = await callModel(content, customPrompt);
     state.lastResult = result;
 
     resultZone.innerHTML = `
@@ -1501,6 +1550,7 @@ document.getElementById('translateBtn').addEventListener('click', async () => {
     const summary = state.mode === 'text'
       ? (original.length > 60 ? original.slice(0,60)+'…' : original)
       : state.mode === 'photo' ? 'Foto subida'
+      : state.codeText ? 'Código: ' + (state.codeFileName || 'archivo')
       : 'PDF: ' + (state.pdfName || 'documento');
     saveHistoryEntry({ mode: state.mode, ts:Date.now(), inputSummary: summary, result });
   }catch(err){
