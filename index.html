@@ -11,18 +11,18 @@
 <meta name="apple-mobile-web-app-title" content="Traductor Sordos">
 <meta name="theme-color" content="#8C7AE6">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Lexend:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Roboto:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --blue-deep:#5B4B94;
-    --blue-mid:#8C7AE6;
-    --blue-light:#C9EDE6;
-    --blue-pale:#F1ECFC;
-    --navy:#3E3363;
-    --navy-soft:#7C6FA0;
+    --blue-deep:#21005D;
+    --blue-mid:#6750A4;
+    --blue-light:#EADDFF;
+    --blue-pale:#F7F2FA;
+    --navy:#1D1B20;
+    --navy-soft:#49454F;
     --highlight:#FFD54A;
     --highlight-soft:#FFF3CC;
-    --bg:#FAF8FF;
+    --bg:#FEF7FF;
     --white:#FFFFFF;
     --radius-lg:34px;
     --radius-md:20px;
@@ -32,7 +32,7 @@
   html,body{margin:0;padding:0;}
   body{
     background: radial-gradient(circle at 50% 0%, #F7F3FF 0%, #ECE5FB 45%, #DCE9F0 100%);
-    font-family:'Inter',sans-serif;
+    font-family:'Roboto',sans-serif;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -145,21 +145,18 @@
     position:relative; z-index:2;
     display:flex; align-items:center; gap:11px;
     margin:0 14px 4px; padding:13px 15px;
-    background:linear-gradient(135deg, rgba(201,237,230,.55), rgba(140,122,230,.28));
-    backdrop-filter:blur(18px) saturate(160%);
-    -webkit-backdrop-filter:blur(18px) saturate(160%);
-    border:1px solid rgba(255,255,255,.7);
+    background:var(--blue-light);
     border-radius:20px;
-    box-shadow:0 10px 26px -14px rgba(91,75,148,.35), inset 0 1px 0 rgba(255,255,255,.6);
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
   }
-  header img{width:40px; height:40px; border-radius:11px; box-shadow:0 3px 8px rgba(91,75,148,.2); border:1.5px solid rgba(255,255,255,.8);}
+  header img{width:40px; height:40px; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.15); border:none;}
   header .htext{display:flex; flex-direction:column; line-height:1.15;}
-  header .htext b{font-family:'Baloo 2',sans-serif; color:var(--navy); font-size:16px;}
+  header .htext b{font-family:'Baloo 2',sans-serif; color:var(--blue-deep); font-size:16px;}
   header .htext small{color:var(--navy-soft); font-size:11.5px; font-weight:500;}
   .header-gear{
     margin-left:auto; width:34px; height:34px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; color:var(--blue-deep);
-    background:rgba(255,255,255,.5); cursor:pointer; transition:.15s;
+    background:rgba(255,255,255,.6); cursor:pointer; transition:.15s;
   }
   .header-gear:active{transform:scale(.92);}
 
@@ -181,11 +178,11 @@
   .tabs{display:grid; grid-template-columns:repeat(2,1fr); gap:8px;}
   .tab{
     flex:1; display:flex; align-items:center; justify-content:center; gap:7px;
-    padding:12px 8px; border-radius:16px; border:2px solid transparent;
-    background:var(--white); color:var(--navy-soft); font-weight:600; font-size:13.5px;
+    padding:12px 8px; border-radius:999px; border:1.5px solid #79747E;
+    background:transparent; color:var(--navy-soft); font-weight:600; font-size:13.5px;
     cursor:pointer; transition:.18s;
   }
-  .tab.active{background:var(--blue-pale); border-color:var(--blue-mid); color:var(--blue-deep);}
+  .tab.active{background:var(--blue-light); border-color:transparent; color:var(--blue-deep); font-weight:700;}
   .tab svg{width:18px;height:18px;}
 
   .card{
@@ -240,11 +237,11 @@
   }
 
   .btn-primary{
-    width:100%; border:none; border-radius:16px; padding:14px;
-    background:linear-gradient(135deg, var(--blue-mid), var(--blue-deep));
-    color:#fff; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15.5px;
+    width:100%; border:none; border-radius:28px; padding:14px;
+    background:var(--blue-mid);
+    color:#fff; font-family:'Roboto',sans-serif; font-weight:700; font-size:15.5px;
     display:flex; align-items:center; justify-content:center; gap:8px;
-    cursor:pointer; box-shadow:0 10px 20px -8px rgba(15,95,184,0.55);
+    cursor:pointer; box-shadow:0 3px 8px -2px rgba(103,80,164,.5);
     transition:.15s;
   }
   .btn-primary:disabled{opacity:.6; cursor:not-allowed;}
@@ -288,11 +285,11 @@
 
   .level-seg{display:flex; gap:7px; margin-top:10px;}
   .level-opt{
-    flex:1; text-align:center; padding:10px 6px; border-radius:12px;
-    border:2px solid #E3EEF8; background:#F6FAFE; color:var(--navy-soft);
+    flex:1; text-align:center; padding:10px 6px; border-radius:999px;
+    border:1.5px solid #79747E; background:transparent; color:var(--navy-soft);
     font-size:12px; font-weight:700; cursor:pointer; transition:.15s;
   }
-  .level-opt.active{background:var(--blue-mid); border-color:var(--blue-mid); color:#fff; box-shadow:0 6px 14px -6px rgba(46,139,238,.6);}
+  .level-opt.active{background:var(--blue-mid); border-color:transparent; color:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25);}
 
   details{margin-top:12px;}
   summary{font-size:12px; font-weight:600; color:var(--navy-soft); cursor:pointer;}
@@ -318,21 +315,20 @@
     position:relative; z-index:2;
     display:flex; justify-content:center; align-items:center; gap:60px;
     padding:10px 8px 16px;
-    background:rgba(255,255,255,.55);
-    backdrop-filter:blur(16px) saturate(160%);
-    -webkit-backdrop-filter:blur(16px) saturate(160%);
-    border-top:1px solid rgba(255,255,255,.6);
-    box-shadow:0 -8px 20px -14px rgba(9,40,75,.3);
+    background:#FEF7FF;
+    border-top:1px solid #EEE3F7;
+    box-shadow:0 -2px 8px -6px rgba(0,0,0,.12);
   }
   @media (max-width: 520px){
     nav.tabbar{ padding-bottom: max(16px, env(safe-area-inset-bottom)); }
   }
   nav.tabbar .navitem{
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    font-size:10.5px; font-weight:600; color:#B3A9D6; cursor:pointer;
+    font-size:10.5px; font-weight:600; color:#79747E; cursor:pointer;
   }
-  nav.tabbar .navitem.active{color:var(--blue-deep);}
-  nav.tabbar svg{width:20px;height:20px;}
+  nav.tabbar .navitem.active{color:var(--blue-deep); font-weight:700;}
+  nav.tabbar svg{width:20px;height:20px; padding:6px 20px; border-radius:16px; transition:background .25s; box-sizing:content-box;}
+  nav.tabbar .navitem.active svg{background:var(--blue-light);}
 
   .history-item{
     background:#fff; border-radius:16px; padding:13px 14px; margin-bottom:10px;
